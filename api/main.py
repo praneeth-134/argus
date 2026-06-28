@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from datetime import datetime
-from api.routes import models
+from api.routes import models, predictions
 
 app = FastAPI(
     title="Argus — ML Monitoring Platform",
@@ -9,6 +9,7 @@ app = FastAPI(
 )
 
 app.include_router(models.router)
+app.include_router(predictions.router)
 
 @app.get("/health")
 def health_check():
