@@ -9,6 +9,7 @@ class MLModel(Base):
     version = Column(String, nullable=False)
     description = Column(String)
     feature_names = Column(JSON)
+    baseline_data = Column(JSON)  # NEW: stores baseline feature values for drift comparison
     created_at = Column(DateTime, default=datetime.utcnow)
 
 class PredictionLog(Base):
@@ -16,7 +17,7 @@ class PredictionLog(Base):
     id = Column(Integer, primary_key=True)
     model_id = Column(Integer, nullable=False)
     input_features = Column(JSON)
-    prediction = Column(Float)
+    prediction = Column(String)  # changed from Float to String
     confidence = Column(Float)
     logged_at = Column(DateTime, default=datetime.utcnow)
 

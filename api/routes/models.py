@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from database.connection import get_db
 from database.models import MLModel
 
@@ -12,6 +12,7 @@ class ModelRegisterRequest(BaseModel):
     version: str
     description: Optional[str] = None
     feature_names: List[str]
+    baseline_data: Optional[Dict[str, List[float]]] = None
 
 @router.post("/register_model")
 def register_model(payload: ModelRegisterRequest, db: Session = Depends(get_db)):
@@ -19,7 +20,8 @@ def register_model(payload: ModelRegisterRequest, db: Session = Depends(get_db))
         name=payload.name,
         version=payload.version,
         description=payload.description,
-        feature_names=payload.feature_names
+        feature_names=payload.feature_names,
+        baseline_data=payload.baseline_data
     )
     db.add(new_model)
     db.commit()

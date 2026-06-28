@@ -5,12 +5,13 @@ class ArgusClient:
     def __init__(self, base_url: str = "http://127.0.0.1:8000"):
         self.base_url = base_url
 
-    def register_model(self, name: str, version: str, feature_names: list, description: str = None):
+    def register_model(self, name: str, version: str, feature_names: list, description: str = None, baseline_data: dict = None):
         payload = {
             "name": name,
             "version": version,
             "description": description,
-            "feature_names": feature_names
+            "feature_names": feature_names,
+            "baseline_data": baseline_data
         }
         response = requests.post(f"{self.base_url}/register_model", json=payload)
         response.raise_for_status()

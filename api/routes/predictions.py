@@ -1,7 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Dict, Any
 from cache.redis_client import store_prediction, get_recent_predictions
+from database.connection import get_db
+from database.models import PredictionLog
 
 router = APIRouter()
 
@@ -14,13 +17,25 @@ class PredictionLogRequest(BaseModel):
 
 
 @router.post("/log_prediction")
-def log_prediction(payload: PredictionLogRequest):
+def log_prediction(payload: PredictionLogRequest, db: Session = Depends(get_db)):
+    # Write to Redis (fast cache, recent access)
     prediction_data = {
         "input_features": payload.input_features,
         "prediction": payload.prediction,
         "confidence": payload.confidence
     }
     store_prediction(payload.model_id, prediction_data)
+
+    # Write to PostgreSQL (persistent storage, used for drift analysis)
+    log_entry = PredictionLog(
+        model_id=payload.model_id,
+        input_features=payload.input_features,
+        prediction=payload.prediction,  # now correctly storing "BUY"/"SELL"/"HOLD"
+        confidence=payload.confidence
+    )
+    db.add(log_entry)
+    db.commit()
+
     return {"message": "Prediction logged successfully"}
 
 
