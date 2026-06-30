@@ -5,6 +5,7 @@ from database.connection import get_db
 from database.models import MLModel, PredictionLog, DriftReport
 from drift.detector import compute_drift
 from drift.explainer import explain_drift
+from llm.diagnostics import generate_diagnosis
 
 router = APIRouter()
 
@@ -29,8 +30,10 @@ def run_drift_check(model_id: int, db: Session = Depends(get_db)):
     any_drifted = any(v["drifted"] for v in drift_results.values())
 
     shap_explanation = None
+    llm_diagnosis = None
     if any_drifted:
         shap_explanation = explain_drift(baseline_df, current_df, model.feature_names)
+        llm_diagnosis = generate_diagnosis(model.name, drift_results, shap_explanation)
 
     report = DriftReport(
         model_id=model_id,
@@ -46,7 +49,8 @@ def run_drift_check(model_id: int, db: Session = Depends(get_db)):
         "model_id": model_id,
         "drifted": any_drifted,
         "details": drift_results,
-        "shap_explanation": shap_explanation
+        "shap_explanation": shap_explanation,
+        "llm_diagnosis": llm_diagnosis
     }
 
 
